@@ -1,6 +1,6 @@
-name = "veil-usage-example"
+name = "invariant-search"
 version = "0.1.0"
-defaultTargets = ["VeilUsageExample"]
+defaultTargets = ["InvariantSearch"]
 
 [[require]]
 name = "veil"
@@ -8,4 +8,13 @@ git = "https://github.com/verse-lab/veil.git"
 rev = "main"
 
 [[lean_lib]]
-name = "VeilUsageExample"
+name = "InvariantSearch"
+roots = ["InvariantSearch"]
+
+[[lean_lib]]
+name = "VeilProtocols"
+roots = ["VeilProtocols"]
+
+[[lean_lib]]
+name = "Examples"
+roots = ["Examples"]
