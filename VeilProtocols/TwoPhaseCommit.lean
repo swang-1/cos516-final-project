@@ -92,6 +92,10 @@ invariant [manual_8] ¬((go_commit N ∧ go_abort N))
 
 #gen_spec
 
+set_option veil.printCounterexamples true
+set_option veil.smt.model.minimize true
+set_option veil.vc_gen "transition"
+
 set_option veil.smt.solver "cvc5" in
 #check_invariants
 
