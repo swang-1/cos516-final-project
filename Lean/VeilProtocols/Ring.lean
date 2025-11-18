@@ -47,6 +47,10 @@ invariant pending L L → le N L
 
 #gen_spec
 
+set_option veil.printCounterexamples true
+set_option veil.smt.model.minimize true
+set_option veil.vc_gen "transition"
+
 #check_invariants
 
 end Ring

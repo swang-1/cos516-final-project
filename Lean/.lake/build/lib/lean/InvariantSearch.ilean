@@ -1,0 +1,1 @@
+{"version":4,"references":{},"module":"InvariantSearch","directImports":[["VeilProtocols.Ring",false,false,false],["VeilProtocols.TwoPhaseCommit",false,false,false],["InvariantSearch.Grammar",false,false,false]]}
