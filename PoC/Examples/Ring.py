@@ -1,6 +1,6 @@
 import z3
 from InvariantSearch import *
-from PoC.lib import *
+from lib import *
 
 '''
 Ring leader election example for invariant generation
@@ -49,7 +49,7 @@ tot.append(z3.ForAll([x, y], z3.Implies(
 )))
 
 # Totality
-tot.append(z3.ForAll[x, y], z3.Or(le(x, y), le(y, x)))
+tot.append(z3.ForAll([x, y], z3.Or(le(x, y), le(y, x))))
 
 
 # ================ Ring topology constraints ================
@@ -143,6 +143,18 @@ recv = z3.Exists([sender, n, next], z3.And(
           pending_nondet(sender, n),
           z3.If(le(n, sender),
                 pending_forward(n, sender, sender, next),
-                pending_nondet(sender, n))))
-)
+                pending_nondet(sender, n)))))
+
+
+# ================ Package for use with invariant search algorithm ================
+
+sorts = [Node]
+
+leader_rel = Relation(leader, 1, [Node], leader_p)
+pending_rel = Relation(pending, 2, [Node, Node], pending_p)
+le_rel = Relation(le, 2, [Node, Node])
+btw_rel = Relation(btw, 3, [Node, Node, Node])
+relations = [leader_rel, pending_rel, le_rel, btw_rel]
+
+qvars = [w, x, y, x]
 

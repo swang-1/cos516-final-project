@@ -1,2 +1,3 @@
 /Lean/.lake
 /PoC/venv
+__pycache__/
