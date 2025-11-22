@@ -114,11 +114,24 @@ def combos_up_to_len(relations, max_depth=2):
     A helper function for `generate_invariants`. This function
     computes all subsequences of the input list `relations` of length
     up to `max_depth` with duplicates allowed.
+
+    Note that to reduce the invariant search space, this function does
+    not enumerate symmetric invariant combinations by ensuring that
+    relations only appear in non-decreasing order, where the order
+    is the arbitrary ordering given by `relations`.
     '''
-    res = [[]]
+    res = []
 
-    for l in range(1, max_depth + 1):
-        for combo in itertools.combinations_with_replacement(relations, r=l):
-            res.append(combo)
-
+    def backtrack(pos, cur):
+        if pos <= max_depth:
+            res.append(copy.copy(cur))
+        if pos > max_depth:
+            return
+        
+        for rel in relations[pos:]:
+            cur.append(rel)
+            backtrack(pos + 1, cur)
+            cur.pop()
+    
+    backtrack(0, [])
     return res
