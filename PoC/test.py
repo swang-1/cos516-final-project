@@ -22,16 +22,51 @@ def test_combos_up_to_len_depth2():
     for combo in out:
         print(combo)
 
-def test_get_qvar_combos_for_relation():
-    print("Testing get_qvar_combos_for_relation")
+def test_get_clause_instantiations1():
+    print("Testing get_clause_instantiations")
+    A = z3.DeclareSort('A')
+    B = z3.DeclareSort('B')
+
+    a1 = z3.Const('a1', A)
+    a2 = z3.Const('a2', A)
+    b1 = z3.Const('b1', B)
+    b2 = z3.Const('b2', B)
+
+    r1 = z3.Function('r1', A, B, z3.BoolSort())
+    r2 = z3.Function('r2', A, B, z3.BoolSort())
+
+    rel1 = lib.Relation(r1, [A, B])
+    rel2 = lib.Relation(r2, [A, B])
+
     qvars_by_sort = {
-        z3.IntSort(): [1, 2],
-        z3.BoolSort(): ["a", "b"]
+        A: [a1, a2],
+        B: [b1, b2]
     }
-    rel = lib.Relation(None, 4, [z3.IntSort(), z3.BoolSort(), z3.IntSort(), z3.BoolSort()])
-    out = InvariantSearch.get_qvar_combos_for_relation(qvars_by_sort, rel)
-    for combo in out:
-        print(combo)
+
+    out = InvariantSearch.get_clause_instantiations(qvars_by_sort, [rel1, rel2])
+    for inst in out:
+        print([app.instantiate() for app in inst])
+
+def test_get_clause_instantiations2():
+    print("Testing get_clause_instantiations")
+    A = z3.DeclareSort('A')
+
+    a1 = z3.Const('a1', A)
+    a2 = z3.Const('a2', A)
+
+    r1 = z3.Function('r1', A, A, z3.BoolSort())
+    r2 = z3.Function('r2', A, A, z3.BoolSort())
+
+    rel1 = lib.Relation(r1, [A, A])
+    rel2 = lib.Relation(r2, [A, A])
+
+    qvars_by_sort = {
+        A: [a1, a2]
+    }
+
+    out = InvariantSearch.get_clause_instantiations(qvars_by_sort, [rel1, rel2])
+    for inst in out:
+        print([app.instantiate() for app in inst])
 
 def test_generate_invariants_depth1():
     res = InvariantSearch.generate_invariants(Ring.qvars, Ring.sorts, Ring.relations, 1)
@@ -44,4 +79,6 @@ if __name__ == "__main__":
 
     # test_combos_up_to_len_depth1()
     # test_combos_up_to_len_depth2()
-    # test_get_qvar_combos_for_relation()
+
+    # test_get_clause_instantiations1()
+    # test_get_clause_instantiations2()

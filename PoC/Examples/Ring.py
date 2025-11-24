@@ -150,10 +150,10 @@ recv = z3.Exists([sender, n, next], z3.And(
 
 sorts = [Node]
 
-leader_rel = Relation(leader, 1, [Node], leader_p)
-pending_rel = Relation(pending, 2, [Node, Node], pending_p)
-le_rel = Relation(le, 2, [Node, Node])
-btw_rel = Relation(btw, 3, [Node, Node, Node])
+leader_rel = Relation(leader, [Node], leader_p)
+pending_rel = Relation(pending, [Node, Node], pending_p)
+le_rel = Relation(le, [Node, Node])
+btw_rel = Relation(btw, [Node, Node, Node])
 relations = [leader_rel, pending_rel, le_rel, btw_rel]
 
 qvars = [w, x, y, x]

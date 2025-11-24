@@ -70,38 +70,24 @@ def fill_in_qvars(qvars, inv_pairs):
         # x, y are given, but the relation is unary, 
         # forall x, unary_rel x         and          forall y, unary_rel y
         # are equivalent. The following reduces redundant cases:
-        sort_count = {}
+        sort_count_lhs = {}
         for rel in lhs:
             for sort in rel.arg_sorts:
-                sort_count[sort] = sort_count.get(sort, 0) + 1
+                sort_count_lhs[sort] = sort_count_lhs.get(sort, 0) + 1
+        sort_count_rhs = {}
+        for rel in rhs:
+            for sort in rel.arg_sorts:
+                sort_count_rhs[sort] = sort_count_rhs.get(sort, 0) + 1
+
         reduced_qvars_by_sort = {}
         for sort in qvars_by_sort.keys():
-            sort_len = min(sort_count.get(sort, 0), len(qvars_by_sort[sort]))
+            max_needed = max(sort_count_lhs.get(sort, 0), sort_count_rhs.get(sort, 0))
+            sort_len = min(max_needed, len(qvars_by_sort[sort]))
             reduced_qvars_by_sort[sort] = qvars_by_sort[sort][:sort_len]
 
-        lhs_app = [] # if lhs = [r1, r2, ...] Should have the form [[App(r1, a1), App(r2, a2), ...], ...]
-        lhs_options = []
-        for rel in lhs:
-            choices = get_qvar_combos_for_relation(reduced_qvars_by_sort, rel)
-            instantiated = []
-            for args in choices:
-                instantiated.append(App(rel, args))
-                instantiated.append(App(rel, args, True))
-            lhs_options.append(instantiated)
-        for combo in itertools.product(*lhs_options):
-            lhs_app.append(combo)
-
-        rhs_app = []
-        rhs_options = []
-        for rel in rhs:
-            choices = get_qvar_combos_for_relation(reduced_qvars_by_sort, rel)
-            instantiated = []
-            for args in choices:
-                instantiated.append(App(rel, args))
-                instantiated.append(App(rel, args, True))
-            rhs_options.append(instantiated)
-        for combo in itertools.product(*rhs_options):
-            rhs_app.append(combo)
+        # if lhs = [r1, r2, ...] Should have the form [[App(r1, a1), App(r2, a2), ...], ...]
+        lhs_app = get_clause_instantiations(reduced_qvars_by_sort, lhs) 
+        rhs_app = get_clause_instantiations(reduced_qvars_by_sort, rhs)
 
         for pair in itertools.product(lhs_app, rhs_app):
             res.append(pair)
@@ -109,42 +95,64 @@ def fill_in_qvars(qvars, inv_pairs):
     return res
     
 
-def get_qvar_combos_for_relation(qvars_by_sort, relation):
+def get_clause_instantiations(qvars_by_sort, clause):
     '''
-    Helper function for fill_in_qvars. Given a relation object `relation`
-    and a set of quantified variables organized by sort, returns all
-    possible variable combinations for instantiating `relation.
+    Helper function for fill_in_qvars. Given a list representing
+    a clause consisting of a cojunction/disjunction of relations and a
+    set of quantified variables organized by sort, returns all possible
+    instantiations of `clause`.
 
-    To reduce the search space, the output variable combinations only
-    contains those where each varaible's first appearance is in
-    increasing order of their index (based on the arbitrary ordering)
-    given by the list(s) in `qvars_by_sort`.
+    To reduce the search space, this function will guarantee that for any
+    instantiation, each varaible's first appearance across all relations
+    in `clause` is increasing order of their index,based on the arbitrary 
+    ordering given by the list(s) in `qvars_by_sort`
 
     `qvars_by_sort` should be a dictionary where the entry
     `qvars_by_sort`[sort] is a list containing the quantified variables
     of sort.
     '''
+
+    # Make sure arrangement is possible
+    for rel in clause:
+        for sort in rel.arg_sorts:
+            if sort not in qvars_by_sort:
+                raise AssertionError("Function {rel} expects value of sort {sort}, but no such qvar provided")
+
+
     res = []
 
-    def backtrack(pos, cur, max_ind):
-        if pos == len(relation.arg_sorts):
-            res.append(copy.copy(cur))
+    def backtrack(rel_id, pos_in_rel, cur_clause, cur_rel_instance, max_ind):
+        if rel_id == len(clause):
+            res.append(copy.copy(cur_clause))
+            return
+
+        cur_rel = clause[rel_id]
+        if pos_in_rel == len(cur_rel.arg_sorts):
+            cur_clause.append(App(cur_rel, copy.copy(cur_rel_instance)))
+            backtrack(rel_id + 1, 0, cur_clause, [], max_ind)
+            cur_clause.pop()
             return
         
-        cur_sort = relation.arg_sorts[pos]
+        cur_sort = cur_rel.arg_sorts[pos_in_rel]
+        max_ind_for_sort = max_ind.get(cur_sort, -1)
 
-        if cur_sort not in qvars_by_sort:
-            raise AssertionError("Function {rel} expects value of sort {sort}, but no such qvar provided")
-        
+        used = set()
+        for app in cur_clause:
+            used.update(app.args)
+        used.update(cur_rel_instance)
+
         for i in range(len(qvars_by_sort[cur_sort])):
             qvar = qvars_by_sort[cur_sort][i]
-            if i >= max_ind or qvar in cur:
-                new_max = max(i, max_ind)
-                cur.append(qvar)
-                backtrack(pos + 1, cur, new_max)
-                cur.pop()
+            if i >= max_ind_for_sort or qvar in used:
+                new_max = max(i, max_ind_for_sort)
 
-    backtrack(0, [], -1)
+                max_ind[cur_sort] = new_max
+                cur_rel_instance.append(qvar)
+                backtrack(rel_id, pos_in_rel+1, cur_clause, cur_rel_instance, max_ind)
+                cur_rel_instance.pop()
+                max_ind[cur_sort] = max_ind_for_sort
+
+    backtrack(0, 0, [], [], {})
     return res
 
     
@@ -169,6 +177,9 @@ def combos_up_to_len(relations, max_depth=2):
         
         for rel in relations[pos:]:
             cur.append(rel)
+            backtrack(pos + 1, cur)
+            cur.pop()
+            cur.append(rel.negate())
             backtrack(pos + 1, cur)
             cur.pop()
     

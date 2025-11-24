@@ -31,20 +31,23 @@ class Disj():
             return z3.BoolVal(False)
 
 class Relation():
-    def __init__(self, rel, arity, arg_sorts, prime=None):
+    def __init__(self, rel, arg_sorts, prime=None, neg=False):
         self.relation = rel
         self.prime = prime
-        self.arity = arity
         self.arg_sorts = arg_sorts
+        self.neg = neg
 
     def _validate_args(self, args):
-        assert len(args) == self.arity, f"Incorect number of arguments. Expected {self.arity} but got {len(args)}"
+        assert len(args) == len(self.arg_sorts), f"Incorect number of arguments. Expected {len(self.arg_sorts)} but got {len(args)}"
         for i in range(len(args)):
             if args[i].sort() != self.arg_sorts[i]:
                 raise AssertionError(f"Incorrect sort of argument at position {i}. \
                                      Expected {self.arg_sorts[i]} but got {args[i].sort()}")
 
-    def instantiate(self, args, primed=False, neg=False):
+    def negate(self):
+        return Relation(self.relation, self.arg_sorts, self.prime, (not self.neg))
+
+    def instantiate(self, args, primed=False):
         self._validate_args(args)
         if primed:
             if self.prime is not None:
@@ -54,16 +57,15 @@ class Relation():
         else:
             app = self.relation(*args)
 
-        return z3.Not(app) if neg else app
+        return z3.Not(app) if self.neg else app
     
 class App():
-    def __init__(self, rel, args, neg=False):
+    def __init__(self, rel, args):
         self.relation = rel
         self.args = args
-        self.neg = neg
 
     def instantiate(self, primed=False):
-        return self.relation.instantiate(self.args, primed, self.neg)
+        return self.relation.instantiate(self.args, primed)
 
 def eq_rel(sort):
     '''
@@ -82,7 +84,7 @@ def eq_rel(sort):
         assert z3.is_eq(x == y), "expression {x} == {y} is not a z3 equality expression"
         return x == y
     
-    return Relation(e, 2, (sort, sort))
+    return Relation(e, (sort, sort))
 
 class Invariant():
     def __init__(self, lhs=Conj([]), rhs=Disj([]), qvars=[]):
