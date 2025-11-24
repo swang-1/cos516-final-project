@@ -2,6 +2,7 @@ import z3
 from lib import *
 import copy
 import itertools
+from tqdm import tqdm
 
 
 def generate_invariants(qvars, sorts, relations, max_depth=2):
@@ -62,27 +63,26 @@ def fill_in_qvars(qvars, inv_pairs):
             qvars_by_sort[sort] = []
         qvars_by_sort[sort].append(v)
 
-    def get_choices(rel):
-        res = []
-
-        choices_by_pos = []
-        for sort in rel.arg_sorts:
-            if sort in qvars_by_sort:
-                choices_by_pos.append(qvars_by_sort[sort])
-            else:
-                raise AssertionError("Function {rel} expects value of sort {sort}, but no such qvar provided")
-            
-        for arrangement in itertools.product(*choices_by_pos):
-            res.append(list(arrangement))
-
-        return res
-
     res = []
-    for lhs, rhs in inv_pairs:
+    for lhs, rhs in tqdm(inv_pairs):
+        # There can be some redundancy depending on how many qvars are provided and
+        # how many unique arguments a relation can have. For example, if quantified variables
+        # x, y are given, but the relation is unary, 
+        # forall x, unary_rel x         and          forall y, unary_rel y
+        # are equivalent. The following reduces redundant cases:
+        sort_count = {}
+        for rel in lhs:
+            for sort in rel.arg_sorts:
+                sort_count[sort] = sort_count.get(sort, 0) + 1
+        reduced_qvars_by_sort = {}
+        for sort in qvars_by_sort.keys():
+            sort_len = min(sort_count.get(sort, 0), len(qvars_by_sort[sort]))
+            reduced_qvars_by_sort[sort] = qvars_by_sort[sort][:sort_len]
+
         lhs_app = [] # if lhs = [r1, r2, ...] Should have the form [[App(r1, a1), App(r2, a2), ...], ...]
         lhs_options = []
         for rel in lhs:
-            choices = get_choices(rel)
+            choices = get_qvar_combos_for_relation(reduced_qvars_by_sort, rel)
             instantiated = []
             for args in choices:
                 instantiated.append(App(rel, args))
@@ -94,7 +94,7 @@ def fill_in_qvars(qvars, inv_pairs):
         rhs_app = []
         rhs_options = []
         for rel in rhs:
-            choices = get_choices(rel)
+            choices = get_qvar_combos_for_relation(reduced_qvars_by_sort, rel)
             instantiated = []
             for args in choices:
                 instantiated.append(App(rel, args))
@@ -108,6 +108,45 @@ def fill_in_qvars(qvars, inv_pairs):
 
     return res
     
+
+def get_qvar_combos_for_relation(qvars_by_sort, relation):
+    '''
+    Helper function for fill_in_qvars. Given a relation object `relation`
+    and a set of quantified variables organized by sort, returns all
+    possible variable combinations for instantiating `relation.
+
+    To reduce the search space, the output variable combinations only
+    contains those where each varaible's first appearance is in
+    increasing order of their index (based on the arbitrary ordering)
+    given by the list(s) in `qvars_by_sort`.
+
+    `qvars_by_sort` should be a dictionary where the entry
+    `qvars_by_sort`[sort] is a list containing the quantified variables
+    of sort.
+    '''
+    res = []
+
+    def backtrack(pos, cur, max_ind):
+        if pos == len(relation.arg_sorts):
+            res.append(copy.copy(cur))
+            return
+        
+        cur_sort = relation.arg_sorts[pos]
+
+        if cur_sort not in qvars_by_sort:
+            raise AssertionError("Function {rel} expects value of sort {sort}, but no such qvar provided")
+        
+        for i in range(len(qvars_by_sort[cur_sort])):
+            qvar = qvars_by_sort[cur_sort][i]
+            if i >= max_ind or qvar in cur:
+                new_max = max(i, max_ind)
+                cur.append(qvar)
+                backtrack(pos + 1, cur, new_max)
+                cur.pop()
+
+    backtrack(0, [], -1)
+    return res
+
     
 def combos_up_to_len(relations, max_depth=2):
     '''
