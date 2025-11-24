@@ -31,11 +31,12 @@ class Disj():
             return z3.BoolVal(False)
 
 class Relation():
-    def __init__(self, rel, arg_sorts, prime=None, neg=False):
+    def __init__(self, rel, arg_sorts, prime=None, neg=False, unique_args=False):
         self.relation = rel
         self.prime = prime
         self.arg_sorts = arg_sorts
         self.neg = neg
+        self.unique_args = unique_args
 
     def _validate_args(self, args):
         assert len(args) == len(self.arg_sorts), f"Incorect number of arguments. Expected {len(self.arg_sorts)} but got {len(args)}"
@@ -45,7 +46,7 @@ class Relation():
                                      Expected {self.arg_sorts[i]} but got {args[i].sort()}")
 
     def negate(self):
-        return Relation(self.relation, self.arg_sorts, self.prime, (not self.neg))
+        return Relation(self.relation, self.arg_sorts, self.prime, (not self.neg), self.unique_args)
 
     def instantiate(self, args, primed=False):
         self._validate_args(args)
@@ -84,7 +85,7 @@ def eq_rel(sort):
         assert z3.is_eq(x == y), "expression {x} == {y} is not a z3 equality expression"
         return x == y
     
-    return Relation(e, (sort, sort))
+    return Relation(e, (sort, sort), unique_args=True)
 
 class Invariant():
     def __init__(self, lhs=Conj([]), rhs=Disj([]), qvars=[]):

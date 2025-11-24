@@ -5,7 +5,7 @@ import itertools
 from tqdm import tqdm
 
 
-def generate_invariants(qvars, sorts, relations, max_depth=2):
+def generate_invariants(qvars, sorts, relations, max_depth=2, uniq=set([])):
     '''
     Generates all invariants of the form
 
@@ -143,7 +143,7 @@ def get_clause_instantiations(qvars_by_sort, clause):
 
         for i in range(len(qvars_by_sort[cur_sort])):
             qvar = qvars_by_sort[cur_sort][i]
-            if i >= max_ind_for_sort or qvar in used:
+            if i > max_ind_for_sort or (not cur_rel.unique_args and qvar in used):
                 new_max = max(i, max_ind_for_sort)
 
                 max_ind[cur_sort] = new_max
