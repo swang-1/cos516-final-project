@@ -69,9 +69,10 @@ def test_get_clause_instantiations2():
         print([app.instantiate() for app in inst])
 
 def test_generate_invariants_depth1():
-    res = InvariantSearch.generate_invariants(Ring.qvars, Ring.sorts, Ring.relations, 1)
-    for lhs, rhs in res:
-        print(f"lhs:{[app.instantiate() for app in lhs]}, rhs: {[app.instantiate() for app in rhs]}")
+    res = InvariantSearch.generate_invariants(Ring.qvars, Ring.sorts, Ring.relations, 2)
+    # for lhs, rhs in res:
+    #     print(f"lhs:{[app.instantiate() for app in lhs]}, rhs: {[app.instantiate() for app in rhs]}")
+    print(len(res))
 
 if __name__ == "__main__":
     # test_app_and_relation()

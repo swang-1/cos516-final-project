@@ -31,12 +31,13 @@ class Disj():
             return z3.BoolVal(False)
 
 class Relation():
-    def __init__(self, rel, arg_sorts, prime=None, neg=False, unique_args=False):
+    def __init__(self, rel, arg_sorts, prime=None, neg=False, unique_args=False, protocol=False):
         self.relation = rel
         self.prime = prime
         self.arg_sorts = arg_sorts
         self.neg = neg
         self.unique_args = unique_args
+        self.protocol = protocol
 
     def _validate_args(self, args):
         assert len(args) == len(self.arg_sorts), f"Incorect number of arguments. Expected {len(self.arg_sorts)} but got {len(args)}"

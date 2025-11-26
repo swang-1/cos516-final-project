@@ -5,7 +5,7 @@ import itertools
 from tqdm import tqdm
 
 
-def generate_invariants(qvars, sorts, relations, max_depth=2, uniq=set([])):
+def generate_invariants(qvars, sorts, relations, max_depth=2):
     '''
     Generates all invariants of the form
 
@@ -38,7 +38,7 @@ def generate_invariants(qvars, sorts, relations, max_depth=2, uniq=set([])):
 
     inv_pairs = []
     for prod in itertools.product(pred_combos, pred_combos):
-        if len(prod[1]) > 0:
+        if (contains_protocol_relation(prod[0]) or contains_protocol_relation(prod[1])) and len(prod[1]) > 0:
             inv_pairs.append(prod)
 
     app = fill_in_qvars(qvars, inv_pairs)
@@ -185,3 +185,15 @@ def combos_up_to_len(relations, max_depth=2):
     
     backtrack(0, [])
     return res
+
+def contains_protocol_relation(relations):
+    '''
+    A helper function that checks if `relations` contains at least one relation
+    that are marked as protocol relations (i.e. they descibe some "interesting"
+    property of the protocol, such as the network state or host state(s))
+    '''
+    for rel in relations:
+        if rel.protocol:
+            return True
+        
+    return False
