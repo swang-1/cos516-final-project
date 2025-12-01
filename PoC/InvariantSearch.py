@@ -28,13 +28,7 @@ def generate_invariants(qvars, sorts, relations, max_depth=2):
     Output:
         A list of Invariant objects
     '''
-    # add equality relation to grammar of predicates
-    preds = copy.copy(relations)
-    for s in sorts:
-        preds.append(eq_rel(s))
-
-    # compute all possible conjuncts/disjuncts of predicates:
-    pred_combos = combos_up_to_len(preds, max_depth)
+    pred_combos = combos_up_to_len(relations, max_depth)
 
     inv_pairs = []
     for prod in itertools.product(pred_combos, pred_combos):
