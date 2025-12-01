@@ -5,7 +5,7 @@ import itertools
 from tqdm import tqdm
 
 
-def generate_invariants(qvars, sorts, relations, max_depth=2):
+def generate_invariants(qvars, sorts, relations, max_depth=2, max_depth_rhs=None):
     '''
     Generates all invariants of the form
 
@@ -25,13 +25,18 @@ def generate_invariants(qvars, sorts, relations, max_depth=2):
             the possible relations that can appear as predicates
         max_depth: The maximum number of predicates that can appear in
             a conjunct/disjunct of any invariant
+        max_depth_rhs: Optional argument for defining different max depths
+            for the lhs and rhs of invariants. If this parameter is included,
+            then max_depth will be the max_depth of the LHS.
     Output:
         A list of Invariant objects
     '''
-    pred_combos = combos_up_to_len(relations, max_depth)
+    rhs_depth = max_depth_rhs if max_depth_rhs is not None else max_depth
+    pred_combos_lhs = combos_up_to_len(relations, max_depth)
+    pred_combos_rhs = combos_up_to_len(relations, rhs_depth)
 
     inv_pairs = []
-    for prod in itertools.product(pred_combos, pred_combos):
+    for prod in itertools.product(pred_combos_lhs, pred_combos_rhs):
         if (contains_protocol_relation(prod[0]) or contains_protocol_relation(prod[1])) and len(prod[1]) > 0:
             inv_pairs.append(prod)
 
