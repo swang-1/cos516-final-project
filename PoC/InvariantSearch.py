@@ -4,6 +4,29 @@ import copy
 import itertools
 from tqdm import tqdm
 
+def invariant_search(axioms, init, tr, cand_set, cex):
+    '''
+    Performs invariant search over a provided set of candidate invariants to
+    find a set of inductive invariants that eliminates the given counterexample.
+    The inductiveness check is performed against provided initialization and
+    transition constraints, as well as any additional axioms.
+
+    Input:
+        axioms: A list of Z3 constraints representing the axioms for the 
+            system specification
+        init: A list of Z3 constraints representing the initial conditions
+            for the system specification
+        tr: A list of Z3 constraints representing the transition relations
+            for the system specification
+        cand_set: A list of Invariant objects to be searched over
+        cex: A list of Z3 constraints describing the counterexample to
+            eliminate
+    Output:
+        A list of Invariant objects representing a conjunction of relatively
+        inductive invariants from `cand_set` that eliminate `cex`, if such
+        a conjunction exists. Returns None otherwise.
+    '''
+    pass
 
 def generate_invariants(qvars, sorts, relations, max_depth=2, max_depth_rhs=None):
     '''
@@ -42,7 +65,14 @@ def generate_invariants(qvars, sorts, relations, max_depth=2, max_depth_rhs=None
 
     app = fill_in_qvars(qvars, inv_pairs)
 
-    return app # Placehodler for testing
+    res = []
+
+    for lhs, rhs in app:
+        res.append(Invariant(Conj(lhs), Disj(rhs)))
+        if len(rhs) > 1:
+            res.append(Invariant(Conj(lhs), Conj(rhs)))
+
+    return res
 
     
 def fill_in_qvars(qvars, inv_pairs):
