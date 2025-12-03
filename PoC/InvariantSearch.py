@@ -85,6 +85,7 @@ def invariant_search(axioms, init, trs, cand_set, cex, debug=False):
             # future candidates
             tr_solver.pop()
             learned.append(inv)
+            cex_solver.add(inv.formula())
             if debug:
                 print(f"Inductiveness check succeeded. Adding invariant {inv.formula()} to learned set\n")
         else:
@@ -133,7 +134,7 @@ def generate_invariants(qvars, relations, max_depth=2, max_depth_rhs=None):
 
     res = []
 
-    for lhs, rhs in app:
+    for lhs, rhs in tqdm(app):
         if not is_tautology(lhs, rhs):
             res.append(Invariant(Conj(lhs), Disj(rhs)))
         if len(rhs) > 1:

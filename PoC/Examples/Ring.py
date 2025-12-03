@@ -186,15 +186,27 @@ cex1 = [
     le(node0, node0) == z3.BoolVal(True),
     le(node0, node1) == z3.BoolVal(True),
     le(node1, node1) == z3.BoolVal(True),
+    le(node1, node0) == z3.BoolVal(False),
     pending(node0, node0) == z3.BoolVal(True),
     leader_p(node0) == z3.BoolVal(True)
 ]
 
-invariants = generate_invariants(qvars, relations, 2, 1)
 
-out = invariant_search(axioms, init, trs, invariants, cex1, debug=False)
+if __name__ == "__main__":
+    invariants = generate_invariants(qvars, relations, 2, 1)
 
-with open('ring_invariants.csv', 'w', newline='') as csvfile:
-    writer = csv.writer(csvfile)
-    for inv in out:
-        writer.writerow([inv.formula()])
+    out = invariant_search(axioms, init, trs, invariants, cex1, debug=False)
+
+    with open('ring_invariants.csv', 'w', newline='') as csvfile:
+        writer = csv.writer(csvfile)
+        for inv in out:
+            writer.writerow([inv.formula()])
+
+    # s = z3.Solver()
+    # s.add(axioms)
+    # s.add(cex1)
+    # s.add(z3.ForAll([x, y], z3.Implies(
+    #                     pending(x, x),
+    #                     le(y, x))
+    #                 ))
+    # print(s.check())

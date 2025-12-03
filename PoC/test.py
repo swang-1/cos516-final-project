@@ -70,11 +70,13 @@ def test_get_clause_instantiations2():
 
 def test_generate_invariants_depth1():
     res = InvariantSearch.generate_invariants(Ring.qvars, Ring.relations, 1)
-    for inv in res:
-        print(f"Invariant: {inv.formula()}")
-    # print(len(res))
+    # for inv in res:
+    #     print(f"Invariant: {inv.formula()}")
+    print(len(res))
 
 if __name__ == "__main__":
+    # Uncomment tests to run
+
     # test_app_and_relation()
     test_generate_invariants_depth1()
 
