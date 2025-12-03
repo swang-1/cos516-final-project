@@ -4,7 +4,7 @@ import copy
 import itertools
 from tqdm import tqdm
 
-def invariant_search(axioms, init, tr, cand_set, cex):
+def invariant_search(axioms, init, trs, cand_set, cex, debug=False):
     '''
     Performs invariant search over a provided set of candidate invariants to
     find a set of inductive invariants that eliminates the given counterexample.
@@ -21,14 +21,80 @@ def invariant_search(axioms, init, tr, cand_set, cex):
         cand_set: A list of Invariant objects to be searched over
         cex: A list of Z3 constraints describing the counterexample to
             eliminate
+        debug: Set debug mode, which prints additional information
     Output:
         A list of Invariant objects representing a conjunction of relatively
         inductive invariants from `cand_set` that eliminate `cex`, if such
         a conjunction exists. Returns None otherwise.
     '''
-    pass
+    # Initialize solvers
+    cex_solver = z3.Solver()
+    cex_solver.add(cex)
+    cex_solver.add(axioms)
 
-def generate_invariants(qvars, sorts, relations, max_depth=2, max_depth_rhs=None):
+    init_solver = z3.Solver()
+    init_solver.add(init)
+    init_solver.add(axioms)
+
+    tr_solver = z3.Solver()
+    tr_solver.add(axioms)
+
+    candidates = copy.copy(cand_set)
+    learned = []
+
+    while cex_solver.check() == z3.sat:
+        if len(candidates) == 0:
+            print(f"Unable to find a suitable invariant in candidate set that eliminates the given counterexample")
+            return learned
+
+        inv = candidates.pop() # Get the candidate invariant
+        if debug:
+            print(f"candidate invariant: {inv.formula()}") 
+
+        # Check if inv holds in initial state
+        init_solver.push()
+        init_solver.add(z3.Not(inv.formula()))
+        if init_solver.check() == z3.sat:
+            init_solver.pop()
+            if debug:
+                print("Initialization check failed\n")
+            continue
+        else:
+            init_solver.pop()    
+        
+        # Check if transition formula preserves invariant relative to the already
+        # learned invariants
+        tr_solver.push()
+        tr_solver.add(inv.formula())
+        tr_solver.push()
+        tr_solver.add(z3.Not(inv.formula(primed=True)))
+        preserves_inv = True
+        for tr in trs:
+            tr_solver.push()
+            tr_solver.add(tr)
+            if tr_solver.check() == z3.unsat: # tr preserves inv
+                tr_solver.pop() # pop tr
+            else:
+                preserves_inv = False
+                tr_solver.pop() # pop tr
+                if debug:
+                    print("Transition check failed\n")
+                break
+        if preserves_inv:
+            # don't pop inv to keep it for checking relative inductiveness of
+            # future candidates
+            tr_solver.pop()
+            learned.append(inv)
+            if debug:
+                print(f"Inductiveness check succeeded. Adding invariant {inv.formula()} to learned set\n")
+        else:
+            # pop both inv' and inv
+            tr_solver.pop()
+            tr_solver.pop()
+
+    return learned
+
+def generate_invariants(qvars, relations, max_depth=2, max_depth_rhs=None):
     '''
     Generates all invariants of the form
 
@@ -68,7 +134,8 @@ def generate_invariants(qvars, sorts, relations, max_depth=2, max_depth_rhs=None
     res = []
 
     for lhs, rhs in app:
-        res.append(Invariant(Conj(lhs), Disj(rhs)))
+        if not is_tautology(lhs, rhs):
+            res.append(Invariant(Conj(lhs), Disj(rhs)))
         if len(rhs) > 1:
             res.append(Invariant(Conj(lhs), Conj(rhs)))
 
@@ -223,6 +290,22 @@ def contains_protocol_relation(relations):
     '''
     for rel in relations:
         if rel.protocol:
+            return True
+        
+    return False
+
+def is_tautology(lhs, rhs):
+    '''
+    Helper function to check if And(lhs) ==> Or(rhs) is a tautology or not.
+    This is a syntactic check to see that if any instantiations from lhs are
+    contained in rhs.
+
+    Inputs:
+        lhs: A list of App objects representing the terms in a conjunction.
+        rhs: A list of App objects representing the terms in a disjunction.
+    '''
+    for app in lhs:
+        if app in rhs:
             return True
         
     return False

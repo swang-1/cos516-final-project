@@ -1,3 +1,9 @@
+import sys
+from pathlib import Path
+
+sys.path.append(str(Path(__file__).parent.parent))
+
+import csv
 import z3
 from InvariantSearch import *
 from lib import *
@@ -79,7 +85,7 @@ between.append(z3.ForAll([w, x, y], z3.Or(
 
 leader_init = z3.ForAll([x], leader(x) == z3.BoolVal(False))
 pending_init = z3.ForAll([x, y], pending(x, y) == z3.BoolVal(False))
-init = z3.And(leader_init, pending_init)
+init = [leader_init, pending_init]
 
 
 # ================ State transition formulas ================
@@ -158,3 +164,37 @@ relations = [leader_rel, pending_rel, le_rel, btw_rel]
 
 qvars = [w, x, y, x]
 
+trs = [send, recv]
+axioms = tot + between
+
+# First counterexample, when trying to verify just the safety property
+# with no additional invariants:
+#
+# sort node = #[node0, node1]
+# n = node0
+# next = node1
+# sender = node0
+# st.pending(node0, node0) = true
+# st'.leader(node0) = true
+# tot.le(node0, node0) = true
+# tot.le(node0, node1) = true
+# tot.le(node1, node1) = true
+node0 = z3.Const('node0', Node)
+node1 = z3.Const('node1', Node)
+
+cex1 = [
+    le(node0, node0) == z3.BoolVal(True),
+    le(node0, node1) == z3.BoolVal(True),
+    le(node1, node1) == z3.BoolVal(True),
+    pending(node0, node0) == z3.BoolVal(True),
+    leader_p(node0) == z3.BoolVal(True)
+]
+
+invariants = generate_invariants(qvars, relations, 2, 1)
+
+out = invariant_search(axioms, init, trs, invariants, cex1, debug=False)
+
+with open('ring_invariants.csv', 'w', newline='') as csvfile:
+    writer = csv.writer(csvfile)
+    for inv in out:
+        writer.writerow([inv.formula()])

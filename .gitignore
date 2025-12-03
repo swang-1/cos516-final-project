@@ -1,3 +1,4 @@
 /Lean/.lake
 /PoC/venv
+*.csv
 __pycache__/

@@ -1,6 +1,19 @@
 import z3
 
 
+def get_qvars_from_clause(clause):
+    '''
+    A helper function that returns the set of unique quantified arguments from
+    a list of instantiations (i.e. a set of App objects)
+    '''
+    res = []
+
+    for app in clause:
+        res += app.args
+
+    return set(res)
+
+
 class Relation():
     '''
     A wrapper class for representing a relation for describing protocol state.
@@ -43,7 +56,7 @@ class Relation():
             if self.prime is not None:
                 app = self.prime(*args)
             else:
-                raise AssertionError(f"Tried applying to prime function that doesn't exist")
+                app = self.relation(*args)
         else:
             app = self.relation(*args)
 
@@ -61,6 +74,9 @@ class App():
     def __init__(self, rel, args):
         self.relation = rel
         self.args = args
+
+    def __eq__(self, other):
+        return self.args == other.args and self.relation == other.relation
 
     def instantiate(self, primed=False):
         '''
@@ -105,7 +121,7 @@ class Conj():
     '''
     def __init__(self, conj=[]):
         self._terms = conj
-        self.qvars = get_qvars_from_clause(self.terms)
+        self.qvars = get_qvars_from_clause(self._terms)
 
     def get_terms(self):
         return self._terms
@@ -194,16 +210,3 @@ class Invariant():
             return z3.ForAll(self._qvars, self._rhs.formula(primed))
 
         return z3.ForAll(self._qvars, z3.Implies(self._lhs.formula(primed), self._rhs.formula(primed)))
-    
-
-def get_qvars_from_clause(clause):
-    '''
-    A helper function that returns the set of unique quantified arguments from
-    a list of instantiations (i.e. a set of App objects)
-    '''
-    res = []
-
-    for app in clause:
-        res += app.args
-
-    return set(res)
