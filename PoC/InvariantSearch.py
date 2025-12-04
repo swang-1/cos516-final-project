@@ -220,7 +220,9 @@ def get_clause_instantiations(qvars_by_sort, clause):
 
     def backtrack(rel_id, pos_in_rel, cur_clause, cur_rel_instance, max_ind):
         if rel_id == len(clause):
-            res.append(copy.copy(cur_clause))
+            # Don't include instantiations that contain both a predicate and its negation
+            if not contains_negation_pair(cur_clause) and not contains_duplicates(cur_clause): 
+                res.append(copy.copy(cur_clause))
             return
 
         cur_rel = clause[rel_id]
@@ -309,4 +311,34 @@ def is_tautology(lhs, rhs):
         if app in rhs:
             return True
         
+    return False
+
+def contains_negation_pair(clause):
+    '''
+    Helper function to check if `clause` contains any pair of applications
+    where one is the negation of the other. This check is used to eliminate
+    redundant invariants.
+    '''
+    i = 0
+    while i < len(clause) - 1:
+        app = clause[i]
+        for j in range(i + 1, len(clause)):
+            if app.is_negation(clause[j]):
+                return True
+        i += 1
+    
+    return False
+
+def contains_duplicates(clause):
+    '''
+    Helper function to check if `clause` contains any duplicate applications.
+    This check is used to eliminate redundant invariants.
+    '''
+    i = 0
+    while i < len(clause) - 1:
+        app = clause[i]
+        if app in clause[i + 1:]:
+            return True
+        i += 1
+    
     return False

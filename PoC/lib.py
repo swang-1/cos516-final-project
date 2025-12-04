@@ -40,6 +40,15 @@ class Relation():
         self.unique_args = unique_args
         self.protocol = protocol
 
+    def is_negation(self, other):
+        return (self.relation == other.relation and
+                self.prime == other.prime and
+                self.arg_sorts == other.arg_sorts and
+                self.neg != other.neg and
+                self.unique_args == other.unique_args and
+                self.protocol == other.protocol) 
+
+
     def _validate_args(self, args):
         assert len(args) == len(self.arg_sorts), f"Incorect number of arguments. Expected {len(self.arg_sorts)} but got {len(args)}"
         for i in range(len(args)):
@@ -48,7 +57,7 @@ class Relation():
                                      Expected {self.arg_sorts[i]} but got {args[i].sort()}")
 
     def negate(self):
-        return Relation(self.relation, self.arg_sorts, self.prime, (not self.neg), self.unique_args)
+        return Relation(self.relation, self.arg_sorts, self.prime, (not self.neg), self.unique_args, self.protocol)
 
     def instantiate(self, args, primed=False):
         self._validate_args(args)
@@ -77,6 +86,9 @@ class App():
 
     def __eq__(self, other):
         return self.args == other.args and self.relation == other.relation
+    
+    def is_negation(self, other):
+        return self.args == other.args and self.relation.is_negation(other.relation)
 
     def instantiate(self, primed=False):
         '''
