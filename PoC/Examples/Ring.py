@@ -195,13 +195,15 @@ cex1 = [
 if __name__ == "__main__":
     invariants = generate_invariants(qvars, relations, 2, 1)
 
-    out = invariant_search(axioms, init, trs, invariants, cex1, debug=False)
+    out, success = invariant_search(axioms, init, trs, invariants, cex1, debug=False)
 
     with open('ring_invariants.csv', 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
+        writer.writerow([f"Counterexample elimination succeeded? {success}"])
         for inv in out:
             writer.writerow([inv.formula()])
 
+    # Test if the counterexample is written correctly
     # s = z3.Solver()
     # s.add(axioms)
     # s.add(cex1)

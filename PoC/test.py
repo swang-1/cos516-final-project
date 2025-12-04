@@ -1,5 +1,6 @@
 import z3
 import Examples.Ring as Ring
+import Examples.DecentralizedLock as Lock
 import InvariantSearch
 import lib
 
@@ -74,14 +75,67 @@ def test_generate_invariants_depth1():
     #     print(f"Invariant: {inv.formula()}")
     print(len(res))
 
+def test_generate_invariants_depth2():
+    res = InvariantSearch.generate_invariants(Lock.qvars, Lock.relations, 2)
+    print(len(res))
+
+
+def test_ring_transitions():
+    # Invariant: pending S D ∧ btw S N D → le N S
+    # This should be inductive on its own
+    b1 = lib.App(Ring.pending_rel, [Ring.x, Ring.z])
+    b2 = lib.App(Ring.btw_rel, [Ring.x, Ring.y, Ring.z])
+    b3 = lib.App(Ring.le_rel, [Ring.y, Ring.x])
+    inv = lib.Invariant(lib.Conj([b1, b2]), lib.Disj([b3]))
+
+    print("testing send")
+    s = z3.Solver()
+    s.add(Ring.axioms)
+    s.add(Ring.send)
+    s.add(inv.formula())
+    s.add(z3.Not(inv.formula(primed=True)))
+    assert s.check() == z3.unsat, f"Expected solver to return unsat but got {s.check()}"
+    print("send passed: send preserves invariant")
+
+    print("testing recv")
+    r = z3.Solver()
+    r.add(Ring.axioms)
+    r.add(Ring.recv)
+    r.add(inv.formula())
+    r.add(z3.Not(inv.formula(primed=True)))
+    assert r.check() == z3.unsat, f"Expected solver to return unsat but got {r.check()}"
+    print("recv passed: recv preserves invariant")
+
+def test_invariant_search_for_ring():
+    # pending L L → le N L
+    a1 = lib.App(Ring.pending_rel, [Ring.x, Ring.x])
+    a2 = lib.App(Ring.le_rel, [Ring.y, Ring.x])
+    inv1 = lib.Invariant(lib.Conj([a1]), lib.Disj([a2]))
+
+    # pending S D ∧ btw S N D → le N S
+    b1 = lib.App(Ring.pending_rel, [Ring.x, Ring.z])
+    b2 = lib.App(Ring.btw_rel, [Ring.x, Ring.y, Ring.z])
+    b3 = lib.App(Ring.le_rel, [Ring.y, Ring.x])
+    inv2 = lib.Invariant(lib.Conj([b1, b2]), lib.Disj([b3]))
+    cands = [inv1, inv2]
+
+    res = InvariantSearch.invariant_search(Ring.axioms, Ring.init, Ring.trs, cands, Ring.cex1, debug=True)
+    for inv in res:
+        print(inv.formula())
+
+
 if __name__ == "__main__":
     # Uncomment tests to run
 
     # test_app_and_relation()
-    test_generate_invariants_depth1()
+    # test_generate_invariants_depth1()
+    # test_generate_invariants_depth2()
 
     # test_combos_up_to_len_depth1()
     # test_combos_up_to_len_depth2()
 
     # test_get_clause_instantiations1()
     # test_get_clause_instantiations2()
+
+    test_ring_transitions()
+    # test_invariant_search_for_ring()
