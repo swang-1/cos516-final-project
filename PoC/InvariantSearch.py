@@ -4,6 +4,7 @@ import copy
 import itertools
 from tqdm import tqdm
 
+
 def invariant_search(axioms, init, trs, cand_set, cex, debug=False):
     '''
     Performs invariant search over a provided set of candidate invariants to
@@ -23,9 +24,11 @@ def invariant_search(axioms, init, trs, cand_set, cex, debug=False):
             eliminate
         debug: Set debug mode, which prints additional information
     Output:
-        A list of Invariant objects representing a conjunction of relatively
-        inductive invariants from `cand_set` that eliminate `cex`, if such
-        a conjunction exists. Returns None otherwise.
+        learned: A list of Invariant objects representing a conjunction of relatively
+            inductive invariants from `cand_set` that eliminate `cex`, if such
+            a conjunction exists. Returns None otherwise.
+        success: A boolean that indicates whether the invariant search succeeded in
+            eliminating the counterexample
     '''
     # Initialize solvers
     cex_solver = z3.Solver()
@@ -39,17 +42,31 @@ def invariant_search(axioms, init, trs, cand_set, cex, debug=False):
     tr_solver = z3.Solver()
     tr_solver.add(axioms)
 
+    redundancy = z3.Solver()
+    redundancy.add(axioms)
+
     candidates = copy.copy(cand_set)
     learned = []
 
     while cex_solver.check() == z3.sat:
         if len(candidates) == 0:
             print(f"Unable to find a suitable invariant in candidate set that eliminates the given counterexample")
-            return learned
+            return learned, False
 
         inv = candidates.pop() # Get the candidate invariant
         if debug:
             print(f"candidate invariant: {inv.formula()}") 
+
+        # Check if candidate is redundant
+        redundancy.push()
+        redundancy.add(z3.Not(inv.formula()))
+        if redundancy.check() == z3.unsat:
+            redundancy.pop()
+            if debug:
+                print("Skipping redundant invariant")
+            continue
+        else:
+            redundancy.pop()
 
         # Check if inv holds in initial state
         init_solver.push()
@@ -86,6 +103,7 @@ def invariant_search(axioms, init, trs, cand_set, cex, debug=False):
             tr_solver.pop()
             learned.append(inv)
             cex_solver.add(inv.formula())
+            redundancy.add(inv.formula())
             if debug:
                 print(f"Inductiveness check succeeded. Adding invariant {inv.formula()} to learned set\n")
         else:
@@ -93,7 +111,7 @@ def invariant_search(axioms, init, trs, cand_set, cex, debug=False):
             tr_solver.pop()
             tr_solver.pop()
 
-    return learned
+    return learned, True
 
 def generate_invariants(qvars, relations, max_depth=2, max_depth_rhs=None):
     '''
@@ -221,7 +239,7 @@ def get_clause_instantiations(qvars_by_sort, clause):
     def backtrack(rel_id, pos_in_rel, cur_clause, cur_rel_instance, max_ind):
         if rel_id == len(clause):
             # Don't include instantiations that contain both a predicate and its negation
-            if not contains_negation_pair(cur_clause) and not contains_duplicates(cur_clause): 
+            if not (contains_negation_pair(cur_clause) or contains_duplicates(cur_clause)): 
                 res.append(copy.copy(cur_clause))
             return
 

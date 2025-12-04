@@ -40,6 +40,14 @@ class Relation():
         self.unique_args = unique_args
         self.protocol = protocol
 
+    def __eq__(self, other):
+        return (self.relation == other.relation and
+                self.prime == other.prime and
+                self.arg_sorts == other.arg_sorts and
+                self.neg == other.neg and
+                self.unique_args == other.unique_args and
+                self.protocol == other.protocol) 
+
     def is_negation(self, other):
         return (self.relation == other.relation and
                 self.prime == other.prime and
