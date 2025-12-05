@@ -92,6 +92,8 @@ init = [leader_init, pending_init]
 
 n = z3.Const('n', Node)
 next = z3.Const('next', Node)
+sender = z3.Const('sender', Node)
+nondet = z3.Const('nondet', z3.BoolSort())
 
 def update_pending(u, v):
     return z3.ForAll([x, y],
@@ -114,42 +116,31 @@ send = z3.Exists([n, next], z3.And(
     leader_unchanged, 
     update_pending(n, next)))
 
-sender = z3.Const('sender', Node)
-
-def pending_nondet(u, v):
-    return z3.ForAll([x, y], z3.Implies(
-        z3.Or(x != u, y != v),
-        pending_p(x, y) == pending(x, y)
-    ))
-
-def pending_forward(nondet1, nondet2, update1, update2):
-    return z3.ForAll([x, y], z3.And(
-        z3.Implies(
-            z3.And(x == update1, y == update2),
-            pending_p(x, y) == z3.BoolVal(True)
-        ),
-        z3.Implies(
-            z3.And(
-                z3.Or(x != nondet1, y != nondet2),
-                z3.Or(x != update1, y != update2)
-            ),
-            pending_p(x, y) == pending(x, y)
-        )
-    ))
-
-recv = z3.Exists([sender, n, next], z3.And(
+recv = z3.Exists([sender, n, next, nondet], z3.And(
     btw_precond(n, next),
-    pending(sender, n) == z3.BoolVal(True),
+    pending(sender, n),
     z3.ForAll([x], leader_p(x) == z3.If(
         sender == n,
         z3.If(x == n, z3.BoolVal(True), leader(x)),
         leader(x)
     )),
-    z3.If(sender == n,
-          pending_nondet(sender, n),
-          z3.If(le(n, sender),
-                pending_forward(n, sender, sender, next),
-                pending_nondet(sender, n)))))
+    z3.ForAll([x, y], pending_p(x, y) == z3.If(
+        sender == n,
+        z3.If(z3.And(x == sender, y == n), nondet, pending(x, y)), # leader elected, only update original message to nodet value
+        z3.If(le(n, sender),
+              z3.If(z3.And(x == sender, y == next),     # n <= sender, so forward message n to next
+                    z3.BoolVal(True),                   # if x, y = sender, next, then True (forwarded msg)
+                    z3.If(z3.And(x == sender, y == n),  # Otherwise, check if message is original sender -> n
+                          nondet,                       # If so, value is nondeterministic
+                          pending(x, y)
+                    )
+              ),
+              z3.If(z3.And(x == sender, y == n),  # If msg not fowarded, just provide nondet update
+                    nondet,
+                    pending(x, y))
+        )
+    ))
+))
 
 
 # ================ Package for use with invariant search algorithm ================
@@ -193,22 +184,41 @@ cex1 = [
 
 
 if __name__ == "__main__":
-    invariants = generate_invariants(qvars, relations, 2, 1)
+    # invariants = generate_invariants(qvars, relations, 2, 1)
 
-    out, success = invariant_search(axioms, init, trs, invariants, cex1, debug=False)
+    # out, success = invariant_search(axioms, init, trs, invariants, cex1, debug=False)
 
-    with open('ring_invariants.csv', 'w', newline='') as csvfile:
-        writer = csv.writer(csvfile)
-        writer.writerow([f"Counterexample elimination succeeded? {success}"])
-        for inv in out:
-            writer.writerow([inv.formula()])
+    # with open('ring_invariants.csv', 'w', newline='') as csvfile:
+    #     writer = csv.writer(csvfile)
+    #     writer.writerow([f"Counterexample elimination succeeded? {success}"])
+    #     for inv in out:
+    #         writer.writerow([inv.formula()])
 
     # Test if the counterexample is written correctly
-    # s = z3.Solver()
-    # s.add(axioms)
+    s = z3.Solver()
+    s.add(axioms)
     # s.add(cex1)
     # s.add(z3.ForAll([x, y], z3.Implies(
     #                     pending(x, x),
     #                     le(y, x))
     #                 ))
     # print(s.check())
+
+    # Invariant: pending S D ∧ btw S N D → le N S
+    inv = z3.ForAll([x, y, z], z3.Implies(
+        z3.And(
+            pending(x, z), btw(x, y, z)
+        ),
+        le(y, x)
+    ))
+    inv_p = z3.ForAll([x, y, z], z3.Implies(
+        z3.And(
+            pending_p(x, z), btw(x, y, z)
+        ),
+        le(y, x)
+    ))
+
+    s.add(inv)
+    s.add(z3.Not(inv_p))
+    s.add(recv)
+    print(s.check())

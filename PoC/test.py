@@ -119,7 +119,8 @@ def test_invariant_search_for_ring():
     inv2 = lib.Invariant(lib.Conj([b1, b2]), lib.Disj([b3]))
     cands = [inv1, inv2]
 
-    res = InvariantSearch.invariant_search(Ring.axioms, Ring.init, Ring.trs, cands, Ring.cex1, debug=True)
+    res, success = InvariantSearch.invariant_search(Ring.axioms, Ring.init, Ring.trs, cands, Ring.cex1, debug=True)
+    assert success, "Expected invariant search to succeed but failed"
     for inv in res:
         print(inv.formula())
 
@@ -138,4 +139,4 @@ if __name__ == "__main__":
     # test_get_clause_instantiations2()
 
     test_ring_transitions()
-    # test_invariant_search_for_ring()
+    test_invariant_search_for_ring()
