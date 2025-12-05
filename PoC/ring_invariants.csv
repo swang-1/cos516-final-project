@@ -1,0 +1,13 @@
+Counterexample elimination succeeded? True
+"ForAll([w, y, x],
+       Implies(And(btw(w, y, x), pending(y, w)),
+               Not(le(y, x))))"
+"ForAll([w, y, x],
+       Implies(And(btw(w, y, x), pending(x, x)),
+               Not(le(x, y))))"
+"ForAll([w, y, x],
+       Implies(And(btw(w, y, x), pending(w, w)),
+               Not(le(w, y))))"
+"ForAll([w, y, x],
+       Implies(And(Not(le(w, x)), Not(le(y, x))),
+               Not(pending(x, x))))"

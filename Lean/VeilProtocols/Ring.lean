@@ -42,8 +42,16 @@ action recv (sender n next : node) = {
 }
 
 safety [single_leader] leader L → le N L
-invariant pending S D ∧ btw S N D → le N S
-invariant pending L L → le N L
+
+-- ====== The invariants for the original example ======
+-- invariant pending S D ∧ btw S N D → le N S
+-- invariant pending L L → le N L
+
+-- ====== Invariants from running search ======
+invariant btw W Y X ∧ pending Y W → ¬ le Y X
+invariant btw W Y X ∧ pending X X → ¬ le X Y
+invariant btw W Y X ∧ pending W W → ¬ le W Y
+invariant ¬ le W X ∧ ¬ le Y X → ¬ pending X X
 
 #gen_spec
 
