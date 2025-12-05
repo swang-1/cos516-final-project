@@ -73,8 +73,9 @@ recv = z3.And(
 
 message_rel = Relation(message, [Node, Node], message_p, protocol=True)
 lock_rel = Relation(lock, [Node], lock_p, protocol=True)
+eq = eq_rel(Node)
 
-relations = [lock_rel, message_rel]
+relations = [lock_rel, message_rel, eq]
 qvars = [w, x, y, z]
 axioms = []
 trs = [send, recv]
@@ -96,9 +97,7 @@ node1 = z3.Const('node1', Node)
 cex1 = [
     node1 == startNode,
     lock(node1) == z3.BoolVal(True),
-    message(node0, node0) == z3.BoolVal(True),
-    lock_p(node0) == z3.BoolVal(True),
-    lock_p(node1) == z3.BoolVal(True)
+    message(node0, node0) == z3.BoolVal(True)
 ]
 
 no_msg_if_lock = z3.ForAll([w, x, y], z3.Implies(

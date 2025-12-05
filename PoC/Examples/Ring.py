@@ -178,8 +178,7 @@ cex1 = [
     le(node0, node1) == z3.BoolVal(True),
     le(node1, node1) == z3.BoolVal(True),
     le(node1, node0) == z3.BoolVal(False),
-    pending(node0, node0) == z3.BoolVal(True),
-    leader_p(node0) == z3.BoolVal(True)
+    pending(node0, node0) == z3.BoolVal(True)
 ]
 
 
