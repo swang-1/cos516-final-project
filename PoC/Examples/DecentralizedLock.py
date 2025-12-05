@@ -56,22 +56,12 @@ def update_lock(u, b):
 src = z3.Const('src', Node)
 dst = z3.Const('dst', Node)
 
-# send = z3.Exists([src, dst], z3.And(
-#     lock(src) == z3.BoolVal(True),
-#     update_message(src, dst, True),
-#     update_lock(src, False)
-# ))
 send = z3.And(
     lock(src) == z3.BoolVal(True),
     update_message(src, dst, True),
     update_lock(src, False)
 )
 
-# recv = z3.Exists([src, dst], z3.And(
-#     message(src, dst) == z3.BoolVal(True),
-#     update_message(src, dst, False),
-#     update_lock(dst, True)
-# ))
 recv = z3.And(
     message(src, dst) == z3.BoolVal(True),
     update_message(src, dst, False),
@@ -127,27 +117,3 @@ if __name__ == "__main__":
         writer.writerow([f"Counterexample elimination succeeded? {success}"])
         for inv in out:
             writer.writerow([inv.formula()])
-
-    # Test if the counterexample is written correctly
-    # s = z3.Solver()
-    # s.add(cex1)
-    # s.add(no_msg_if_lock)
-    # print(s.check())
-
-    # inv = z3.ForAll([z, y], z3.Implies(
-    #     z3.And(z3.Not(message(y, z)), z3.Not(message(z, z))),
-    #     z3.And(z3.Not(message(y, z)), z3.Not(message(z, y)))
-    # ))
-    # inv_p = z3.ForAll([z, y], z3.Implies(
-    #     z3.And(z3.Not(message_p(y, z)), z3.Not(message_p(z, z))),
-    #     z3.And(z3.Not(message_p(y, z)), z3.Not(message_p(z, y)))
-    # ))
-    # s.add(inv, send)
-    # s.add(z3.Not(inv_p))
-    # print(s.check())
-    # print(z3.prove(z3.Implies(z3.And(init), inv)))
-    # print(z3.prove(z3.Implies(z3.And(inv, send), inv_p)))
-
-
-
-
