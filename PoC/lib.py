@@ -32,29 +32,48 @@ class Relation():
             the enumeration requires that every invariant contains at least one protocol relation to eliminate
             uninformative invariants like `Forall w x y z, w == x ==> y == z`
     '''
-    def __init__(self, rel, arg_sorts, prime=None, neg=False, unique_args=False, protocol=False):
+    def __init__(self, rel, arg_sorts, prime=None, neg=False, unique_args=False, protocol=False, is_eq=False):
         self.relation = rel
         self.prime = prime
         self.arg_sorts = arg_sorts
         self.neg = neg
         self.unique_args = unique_args
         self.protocol = protocol
+        self.is_eq = is_eq
 
     def __eq__(self, other):
-        return (self.relation == other.relation and
-                self.prime == other.prime and
+        if self.is_eq == other.is_eq:
+            return (self.prime == other.prime and
                 self.arg_sorts == other.arg_sorts and
                 self.neg == other.neg and
                 self.unique_args == other.unique_args and
-                self.protocol == other.protocol) 
+                self.protocol == other.protocol)
+        elif self.is_eq != other.is_eq:
+            return False
+        else:
+            return (self.relation == other.relation and
+                    self.prime == other.prime and
+                    self.arg_sorts == other.arg_sorts and
+                    self.neg == other.neg and
+                    self.unique_args == other.unique_args and
+                    self.protocol == other.protocol) 
 
     def is_negation(self, other):
-        return (self.relation == other.relation and
-                self.prime == other.prime and
+        if self.is_eq == other.is_eq:
+            return (self.prime == other.prime and
                 self.arg_sorts == other.arg_sorts and
                 self.neg != other.neg and
                 self.unique_args == other.unique_args and
-                self.protocol == other.protocol) 
+                self.protocol == other.protocol)
+        elif self.is_eq != other.is_eq:
+            return False
+        else:
+            return (self.relation == other.relation and
+                    self.prime == other.prime and
+                    self.arg_sorts == other.arg_sorts and
+                    self.neg != other.neg and
+                    self.unique_args == other.unique_args and
+                    self.protocol == other.protocol) 
 
 
     def _validate_args(self, args):
@@ -65,17 +84,18 @@ class Relation():
                                      Expected {self.arg_sorts[i]} but got {args[i].sort()}")
 
     def negate(self):
-        return Relation(self.relation, self.arg_sorts, self.prime, (not self.neg), self.unique_args, self.protocol)
+        return Relation(self.relation, self.arg_sorts, self.prime, (not self.neg), self.unique_args, self.protocol, self.is_eq)
 
     def instantiate(self, args, primed=False):
         self._validate_args(args)
+        arity_zero = len(self.arg_sorts) == 0
         if primed:
             if self.prime is not None:
-                app = self.prime(*args)
+                app = self.prime if arity_zero else self.prime(*args)
             else:
-                app = self.relation(*args)
+                app = self.relation if arity_zero else self.relation(*args)
         else:
-            app = self.relation(*args)
+            app = self.relation if arity_zero else self.relation(*args)
 
         return z3.Not(app) if self.neg else app
     
@@ -127,7 +147,7 @@ def eq_rel(sort):
         assert z3.is_eq(x == y), "expression {x} == {y} is not a z3 equality expression"
         return x == y
     
-    return Relation(e, (sort, sort), unique_args=True)
+    return Relation(e, (sort, sort), unique_args=True, prime=None, neg=False, protocol=False, is_eq=True)
 
 
 class Conj():

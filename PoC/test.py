@@ -1,6 +1,7 @@
 import z3
 import Examples.Ring as Ring
 import Examples.DecentralizedLock as Lock
+import Examples.TwoPhaseCommit as Commit
 import InvariantSearch
 import lib
 
@@ -79,6 +80,12 @@ def test_generate_invariants_depth2():
     res = InvariantSearch.generate_invariants(Lock.qvars, Lock.relations, 2)
     print(len(res))
 
+def test_generate_invariants_with_arity_0():
+    qvars = Commit.qvars
+    relations = [Commit.abort_flag_rel, Commit.vote_yes_rel]
+    res = InvariantSearch.generate_invariants(qvars, relations, 2)
+    print(len(res))
+
 
 def test_ring_transitions():
     # Invariant: pending S D ∧ btw S N D → le N S
@@ -131,6 +138,7 @@ if __name__ == "__main__":
     # test_app_and_relation()
     # test_generate_invariants_depth1()
     # test_generate_invariants_depth2()
+    test_generate_invariants_with_arity_0()
 
     # test_combos_up_to_len_depth1()
     # test_combos_up_to_len_depth2()
@@ -138,5 +146,5 @@ if __name__ == "__main__":
     # test_get_clause_instantiations1()
     # test_get_clause_instantiations2()
 
-    test_ring_transitions()
-    test_invariant_search_for_ring()
+    # test_ring_transitions()
+    # test_invariant_search_for_ring()
