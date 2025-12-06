@@ -246,6 +246,11 @@ class Invariant():
             primed: A boolean to indicate whether the primed relation
                 should be returned or not (for representing post-states)
         '''
+        if len(self._qvars) == 0:
+            if len(self._lhs.get_terms()) == 0:
+                return self._rhs.formula(primed)
+            return z3.Implies(self._lhs.formula(primed), self._rhs.formula(primed))
+
         if len(self._lhs.get_terms()) == 0:
             return z3.ForAll(self._qvars, self._rhs.formula(primed))
 

@@ -82,8 +82,8 @@ def test_generate_invariants_depth2():
 
 def test_generate_invariants_with_arity_0():
     qvars = Commit.qvars
-    relations = [Commit.abort_flag_rel, Commit.vote_yes_rel]
-    res = InvariantSearch.generate_invariants(qvars, relations, 2)
+    relations = Commit.relations
+    res = InvariantSearch.generate_invariants(qvars, relations, 1, 2)
     print(len(res))
 
 
