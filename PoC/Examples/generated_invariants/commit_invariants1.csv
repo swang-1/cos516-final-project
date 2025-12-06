@@ -1,0 +1,47 @@
+Counterexample elimination succeeded? True
+"ForAll([y, x],
+       Implies(Not(x == y), Or(abort_flag, alive(y))))"
+"ForAll([y, x],
+       Implies(Not(x == y), Or(abort_flag, Not(vote_no(y)))))"
+"ForAll([y, x],
+       Implies(Not(x == y),
+               Or(decide_abort(y), Not(vote_no(y)))))"
+"ForAll([y, x],
+       Implies(Not(x == y),
+               Or(Not(decide_commit(y)), go_commit(y))))"
+"ForAll([y, x],
+       Implies(Not(x == y),
+               Or(Not(go_abort(y)), abort_flag)))"
+"ForAll([y, x],
+       Implies(Not(x == y),
+               Or(Not(go_abort(x)), go_abort(y))))"
+"ForAll([y, x],
+       Implies(Not(x == y),
+               Or(Not(go_abort(y)), Not(go_commit(y)))))"
+"ForAll([y, x],
+       Implies(Not(x == y),
+               Or(Not(go_commit(x)), go_commit(y))))"
+"ForAll([y, x],
+       Implies(Not(x == y),
+               Or(Not(vote_yes(y)), Not(vote_no(y)))))"
+"ForAll([y, x],
+       Implies(Not(x == y),
+               Or(vote_yes(y), Not(go_commit(y)))))"
+"ForAll([y, x], Implies(x == y, Or(abort_flag, alive(y))))"
+"ForAll([y, x],
+       Implies(x == y, Or(abort_flag, Not(vote_no(y)))))"
+"ForAll([y, x],
+       Implies(x == y, Or(decide_abort(y), Not(vote_no(y)))))"
+"ForAll([y, x],
+       Implies(x == y,
+               Or(Not(decide_commit(y)), go_commit(y))))"
+"ForAll([y, x],
+       Implies(x == y, Or(Not(go_abort(y)), abort_flag)))"
+"ForAll([y, x],
+       Implies(x == y,
+               Or(Not(go_abort(y)), Not(go_commit(y)))))"
+"ForAll([y, x],
+       Implies(x == y,
+               Or(Not(vote_yes(y)), Not(vote_no(y)))))"
+"ForAll([y, x],
+       Implies(x == y, Or(vote_yes(y), Not(go_commit(y)))))"

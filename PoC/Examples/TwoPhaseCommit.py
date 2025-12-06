@@ -239,3 +239,59 @@ cex2 = [
     go_abort(node0),
     z3.Not(abort_flag)
 ]
+
+# After running the above two counterexamples and passing the found invariants
+# to Veil, we get the following counterexample:
+# commit_tr_inv_0:
+# interpreted sort Bool
+# sort node = #[node0]
+# n = node0
+# st.abort_flag = true
+# st.alive(node0) = true
+# st.decide_abort(node0) = true
+# st.go_commit(node0) = true
+# st.vote_yes(node0) = true
+# st'.abort_flag = true
+# st'.alive(node0) = true
+# st'.decide_abort(node0) = true
+# st'.decide_commit(node0) = true
+# st'.go_commit(node0) = true
+# st'.vote_yes(node0) = true
+
+cex3 = [
+    abort_flag,
+    alive(node0),
+    decide_abort(node0),
+    go_commit(node0),
+    vote_yes(node0)
+]
+
+if __name__ == "__main__":
+    invariants = generate_invariants(qvars, relations, 1, 2)
+
+    # Counterexample 1
+    out1, success1 = invariant_search(axioms, init, trs, invariants, cex1, debug=True)
+
+    with open('commit_invariants1.csv', 'w', newline='') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow([f"Counterexample elimination succeeded? {success1}"])
+        for inv in out1:
+            writer.writerow([inv.formula()])
+
+    # Counterexample 2
+    out2, success2 = invariant_search(axioms, init, trs, invariants, cex2, debug=True)
+
+    with open('commit_invariants2.csv', 'w', newline='') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow([f"Counterexample elimination succeeded? {success2}"])
+        for inv in out2:
+            writer.writerow([inv.formula()])
+
+    # Counterexample 3
+    out3, success3 = invariant_search(axioms, init, trs, invariants, cex3, debug=True)
+
+    with open('commit_invariants3.csv', 'w', newline='') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow([f"Counterexample elimination succeeded? {success3}"])
+        for inv in out3:
+            writer.writerow([inv.formula()])
