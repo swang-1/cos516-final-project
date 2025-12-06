@@ -1,15 +1,11 @@
-name = "invariant-search"
+name = "examples"
 version = "0.1.0"
-defaultTargets = ["InvariantSearch"]
+defaultTargets = ["Examples"]
 
 [[require]]
 name = "veil"
 git = "https://github.com/verse-lab/veil.git"
 rev = "main"
-
-[[lean_lib]]
-name = "InvariantSearch"
-roots = ["InvariantSearch"]
 
 [[lean_lib]]
 name = "VeilProtocols"

@@ -2,5 +2,4 @@
 -- Import modules here that should be built as part of the library.
 import VeilProtocols.Ring
 import VeilProtocols.TwoPhaseCommit
-
-import InvariantSearch.Grammar
+import VeilProtocols.DecentralizedLock

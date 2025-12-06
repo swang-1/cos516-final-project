@@ -138,7 +138,7 @@ if __name__ == "__main__":
     # test_app_and_relation()
     # test_generate_invariants_depth1()
     # test_generate_invariants_depth2()
-    test_generate_invariants_with_arity_0()
+    # test_generate_invariants_with_arity_0()
 
     # test_combos_up_to_len_depth1()
     # test_combos_up_to_len_depth2()
@@ -148,3 +148,5 @@ if __name__ == "__main__":
 
     # test_ring_transitions()
     # test_invariant_search_for_ring()
+    
+    pass
