@@ -116,7 +116,7 @@ def invariant_search(axioms, init, trs, cand_set, cex, debug=False):
     '''
 ```
 
-`PoC/lib.py` contains classes that define the intermediate representation for invariants, predicates, etc. that are used by the two algorithms above. For example, the application of a predicate to some quantified variables is represented by the `App` class, which stores a relation `r` and the arguments `x1, x2, ...` to be passed. The class then contains a method for instantiating the Z3 term `r(x1, x2, ...)`. The conjunctions and disjunctions found in the LHS and RHS of invariants are then represented by lists of `App` objects, stored in the `Invariant` class.
+`PoC/lib.py` contains classes that define the intermediate representation for invariants, predicates, etc. that are used by the two algorithms above. For example, the application of a predicate to some quantified variables is represented by the `App` class, which stores a relation `r` and the arguments `x1, x2, ...` to be passed. The class then contains a method for instantiating the Z3 term `r(x1, x2, ...)`. The conjunctions and disjunctions found in the LHS and RHS of invariants are then represented by lists of `App` objects, stored in the `Invariant` class. For conjunctions, the empty list represents `True`, while for disjunctions, it represents `False`
 
 `PoC/test.py` contains tests used for validating the invariant generation and search algorithms, as well as some of the protocl implementations and counterexamples. These tests can be run by uncommenting the lines at the bottom of the file.
 
